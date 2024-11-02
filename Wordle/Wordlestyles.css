@@ -1,0 +1,44 @@
+body {
+    background-color: black;
+}
+
+:root {
+    --default: black;
+    --empty: #3a3a3c;
+    --wrong: #b59f3b;
+    --right: #538d4e;
+}
+
+#title {
+    color: white;
+    text-align: center;
+}
+
+.grid {
+    display: grid;
+    grid-template-rows: repeat(6, auto);
+    grid-template-columns: repeat(5, auto);
+}
+
+.gamezone {
+    height: 50px;
+    width: 50px;
+    border: 3px solid var(--empty);
+    margin: 4px;
+    color: aliceblue;
+    display: grid;
+    place-items: center;
+    text-transform: uppercase;
+}
+
+.gamezone.empty {
+    background: var(--empty);
+}
+
+.gamezone.wrong {
+    background: var(--wrong);
+}
+
+.gamezone.right {
+    background: var(--right);
+}
