@@ -201,16 +201,18 @@ async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, 
     return [isPlaying, currentGuess, allUserGuesses]
 }
 
-function playGame() {
-    showRules()
-
+function restartGame() {
     const secretWord = getNewWord()
     const colourTypes = { correct: "#538d4e", exists: "#b59f3b", none: "#8a8a94" }
-    
+
     let currentGuess = ""
     let allUserGuesses = []
     let isPlaying = true
     let processingFrame = false
+
+    console.clear()
+    showRules()
+    console.log("New game started! Good luck!")
 
     document.addEventListener("keydown", async (event) => { // Read user inputs
         if (isPlaying && !processingFrame) {
@@ -219,6 +221,12 @@ function playGame() {
             processingFrame = false;
         }
     })
+}
+
+function playGame() {
+    console.clear()
+    showRules()
+    restartGame() // Initialize by starting the game
 }
 
 playGame()
