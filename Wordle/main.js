@@ -37,14 +37,31 @@ function validateUserInput(input) {
     return input
 }
 
-function validateGuess(userGuess) {
+async function callAPI(url) {
+    try {
+        const response = await fetch(url)
+
+        if (!response.ok) {
+            return null
+        }
+
+        return await response.json()
+    }
+    catch {
+        return null
+    }
+}
+
+async function validateGuess(userGuess) {
     if (userGuess.length !== 5) {
-        return [false, "Word must have 5 letters"]
+        return [false, "Word must have 5 letters", "invalid guess"]
     }
 
-    // Word confirmation
-
-    return [true, null]
+    const definitionData = await callAPI(`https://api.dictionaryapi.dev/api/v2/entries/en/${userGuess}`)
+    if (definitionData === null) {
+        return [false, "Your input is not an actual word", "invalid guess"]
+    }
+    return [true, null, "submitting guess"]
 }
 
 function findColours(secretWord, currentGuess, colourTypes) {
@@ -83,18 +100,18 @@ function findColours(secretWord, currentGuess, colourTypes) {
     return colours
 }
 
-function handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes) {
-    const [valid, userErrorMessage] = validateGuess(currentGuess)
+async function handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes) {
+    const [valid, userErrorMessage, gameState] = await validateGuess(currentGuess)
 
     if (!valid) {
-        return ["internal error", currentGuess, allUserGuesses, userErrorMessage]
+        return [gameState, currentGuess, allUserGuesses, userErrorMessage]
     }
 
     // Adding valid word to the list
     const guessColours = findColours(secretWord, currentGuess, colourTypes)
     allUserGuesses.push({ word: currentGuess, colours: guessColours })
 
-    return ["submitting guess", "", allUserGuesses, userErrorMessage]
+    return [gameState, "", allUserGuesses, userErrorMessage]
 }
 
 function hasPlayerWon(colours, correctColour) {
@@ -142,17 +159,18 @@ function showFrame(gameState, secretWord, currentGuess, allUserGuesses, isPlayin
     console.log("")
 }
 
-function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, input, colourTypes) {
+async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, input, colourTypes) {
     const userInput = validateUserInput(input)
     if (userInput === null) {
         return [isPlaying, currentGuess, allUserGuesses]
     }
 
     // Backend
+    // Possible gameStates: "added letter", "removed letter", "submitting guess", "invalid guess", "player has lost", "player has won"
     let hasWon, userErrorMessage, gameState = null
 
     if (userInput === 'ENTER') {
-        [gameState, currentGuess, allUserGuesses, userErrorMessage] = handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes)
+        [gameState, currentGuess, allUserGuesses, userErrorMessage] = await handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes)
         
         if (userErrorMessage === null) {
             hasWon = hasPlayerWon(allUserGuesses[allUserGuesses.length - 1].colours, colourTypes.correct)
@@ -170,11 +188,11 @@ function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, input,
     }
     else if (userInput === 'BACKSPACE' || userInput === 'DELETE') {
         currentGuess = removeLetter(currentGuess, secretWord)
-        gameState = "removing letter"
+        gameState = "removed letter"
     }
     else {
         currentGuess = addLetter(currentGuess, userInput)
-        gameState = "adding letter"
+        gameState = "added letter"
     }
 
     // Frontend
@@ -192,10 +210,13 @@ function playGame() {
     let currentGuess = ""
     let allUserGuesses = []
     let isPlaying = true
+    let processingFrame = false
 
-    document.addEventListener("keydown", (event) => { // Read user inputs
-        if (isPlaying) {
-            [isPlaying, currentGuess, allUserGuesses] = handleFrame(isPlaying, secretWord.toUpperCase(), currentGuess, allUserGuesses, event.key, colourTypes)
+    document.addEventListener("keydown", async (event) => { // Read user inputs
+        if (isPlaying && !processingFrame) {
+            processingFrame = true;
+            [isPlaying, currentGuess, allUserGuesses] = await handleFrame(isPlaying, secretWord.toUpperCase(), currentGuess, allUserGuesses, event.key, colourTypes)
+            processingFrame = false;
         }
     })
 }
