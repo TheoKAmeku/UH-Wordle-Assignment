@@ -6,14 +6,14 @@ function showRules() {
     console.log("Otherwise the letter does not exist in the word")
 }
 
-function getNewWord() {
-    const wordList = [
-        "apple", "grape", "pearl", "brick", "table",
-        "plant", "stone", "flame", "smoke", "crate",
-        "drink", "sugar", "space", "shine", "glory",
-        "liver", "crisp", "phone", "spark", "slice"
+function getNewWord() { 
+    const wordList = [ 
+        "blade", "knife", "risen", "spoon", "table",
+        "weird", "input", "index", "prize", "mouse",
+        "drink", "train", "space", "glide", "glory",
+        "crest", "fight", "zebra", "spark", "slide"
     ]
-
+    // generates a random index and selects the index from the wordlist and generates it for the user to guess.
     const randomIndex = Math.floor(Math.random() * wordList.length)
     return wordList[randomIndex]
 }
