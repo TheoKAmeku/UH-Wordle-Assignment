@@ -37,8 +37,8 @@ function validateUserInput(input) {
     return input
 }
 
-function validateGuess(userWord) {
-    if (userWord.length !== 5) {
+function validateGuess(userGuess) {
+    if (userGuess.length !== 5) {
         return [false, "Word must have 5 letters"]
     }
 
@@ -47,20 +47,20 @@ function validateGuess(userWord) {
     return [true, null]
 }
 
-function findColours(word, guess, colourTypes) {
+function findColours(secretWord, currentGuess, colourTypes) {
     const colours = []
 
-    for (let i = 0; i < word.length; i++) {
-        const currentChar = guess[i]
+    for (let i = 0; i < secretWord.length; i++) {
+        const currentChar = currentGuess[i]
         const charValidation = { exists: false, correct: false }
 
         // Find what type of colour the character is
-        if (currentChar === word[i]) {
+        if (currentChar === secretWord[i]) {
             // Same character in same place
             charValidation.correct = true
         }
         else {
-            const doesCharExist = word.split("").some((wordChar) => currentChar === wordChar)
+            const doesCharExist = secretWord.split("").some((wordChar) => currentChar === wordChar)
 
             if (doesCharExist) {
                 // Same character different place
@@ -83,19 +83,18 @@ function findColours(word, guess, colourTypes) {
     return colours
 }
 
-function handleGuess(word, guess, allUserGuesses, colourTypes) {
-    const [valid, userErrorMessage] = validateGuess(guess)
+function handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes) {
+    const [valid, userErrorMessage] = validateGuess(currentGuess)
 
     if (!valid) {
-        return [guess, allUserGuesses, userErrorMessage]
+        return ["internal error", currentGuess, allUserGuesses, userErrorMessage]
     }
 
     // Adding valid word to the list
-    const guessColours = findColours(word, guess, colourTypes)
-    allUserGuesses.push({ word: guess, colours: guessColours })
-    guess = ""
+    const guessColours = findColours(secretWord, currentGuess, colourTypes)
+    allUserGuesses.push({ word: currentGuess, colours: guessColours })
 
-    return [guess, allUserGuesses, userErrorMessage]
+    return ["submitting guess", "", allUserGuesses, userErrorMessage]
 }
 
 function hasPlayerWon(colours, correctColour) {
@@ -114,8 +113,8 @@ function addLetter(currentGuess, character) {
     return (currentGuess.length < 5) ? currentGuess + character : currentGuess
 }
 
-function showFrame(word, guess, allUserGuesses, isPlaying, hasWon, userErrorMessage) {
-    const showResults = (hasWon, word) => {
+function showFrame(gameState, secretWord, currentGuess, allUserGuesses, isPlaying, hasWon, userErrorMessage) {
+    function showResults(hasWon, word) {
         if (hasWon) {
             console.log("You Win")
         }
@@ -123,13 +122,13 @@ function showFrame(word, guess, allUserGuesses, isPlaying, hasWon, userErrorMess
             console.log(`You Lose, the word was ${word}`)
         }
     }
-    const showError = (reason) => {
+    function showError(reason) {
         console.log(reason)
     }
 
     if (!isPlaying) {
         // Game has ended
-        showResults(hasWon, word)
+        showResults(hasWon, secretWord)
     }
     else {
         if (userErrorMessage) {
@@ -138,54 +137,65 @@ function showFrame(word, guess, allUserGuesses, isPlaying, hasWon, userErrorMess
         }
     }
     
-    console.log(`Current Guess: ${guess}, isPlaying: ${isPlaying}, hasWon: ${hasWon || false}`)
+    console.log(`Current Guess: ${currentGuess}, isPlaying: ${isPlaying}, gameState: ${gameState}`)
     console.log("All Guesses:", allUserGuesses)
     console.log("")
 }
 
-function handleFrame(isPlaying, word, guess, allUserGuesses, input, colourTypes) {
+function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, input, colourTypes) {
     const userInput = validateUserInput(input)
     if (userInput === null) {
-        return [isPlaying, guess, allUserGuesses]
+        return [isPlaying, currentGuess, allUserGuesses]
     }
 
     // Backend
-    let hasWon, userErrorMessage = null
+    let hasWon, userErrorMessage, gameState = null
 
     if (userInput === 'ENTER') {
-        [guess, allUserGuesses, userErrorMessage] = handleGuess(word, guess, allUserGuesses, colourTypes)
+        [gameState, currentGuess, allUserGuesses, userErrorMessage] = handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes)
         
         if (userErrorMessage === null) {
             hasWon = hasPlayerWon(allUserGuesses[allUserGuesses.length - 1].colours, colourTypes.correct)
             isPlaying = !hasGameFinished(hasWon, allUserGuesses)
+
+            if (!isPlaying) {
+                if (hasWon) {
+                    gameState = "player has won"
+                }
+                else {
+                    gameState = "player has lost"
+                }
+            }
         }
     }
     else if (userInput === 'BACKSPACE' || userInput === 'DELETE') {
-        guess = removeLetter(guess, word)
+        currentGuess = removeLetter(currentGuess, secretWord)
+        gameState = "removing letter"
     }
     else {
-        guess = addLetter(guess, userInput)
+        currentGuess = addLetter(currentGuess, userInput)
+        gameState = "adding letter"
     }
 
     // Frontend
-    showFrame(word, guess, allUserGuesses, isPlaying, hasWon, userErrorMessage)
+    showFrame(gameState, secretWord, currentGuess, allUserGuesses, isPlaying, hasWon, userErrorMessage)
     
-    return [isPlaying, guess, allUserGuesses]
+    return [isPlaying, currentGuess, allUserGuesses]
 }
 
 function playGame() {
     showRules()
 
-    const word = getNewWord()
+    const secretWord = getNewWord()
     const colourTypes = { correct: "#538d4e", exists: "#b59f3b", none: "#8a8a94" }
     
-    let guess = ""
+    let currentGuess = ""
     let allUserGuesses = []
     let isPlaying = true
 
     document.addEventListener("keydown", (event) => { // Read user inputs
         if (isPlaying) {
-            [isPlaying, guess, allUserGuesses] = handleFrame(isPlaying, word.toUpperCase(), guess, allUserGuesses, event.key, colourTypes)
+            [isPlaying, currentGuess, allUserGuesses] = handleFrame(isPlaying, secretWord.toUpperCase(), currentGuess, allUserGuesses, event.key, colourTypes)
         }
     })
 }
