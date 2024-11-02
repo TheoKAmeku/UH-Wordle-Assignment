@@ -7,9 +7,15 @@ function showRules() {
 }
 
 function getNewWord() {
-    // Dummy word
+    const wordList = [
+        "apple", "grape", "pearl", "brick", "table",
+        "plant", "stone", "flame", "smoke", "crate",
+        "drink", "sugar", "space", "shine", "glory",
+        "liver", "crisp", "phone", "spark", "slice"
+    ]
 
-    return "ARISE"
+    const randomIndex = Math.floor(Math.random() * wordList.length)
+    return wordList[randomIndex]
 }
 
 function validateUserInput(input) {
