@@ -425,16 +425,24 @@ function main() {
     setupGame()
     startGame() // Initialize by starting wordle
 
-    // Add an event listener to the button to restart wordle
+    // Button to restart wordle
     document.getElementById("restartButton").addEventListener("click", () => {
         window.location.reload();
     });
+
+    // Buttons to handle rules overlay
     document.getElementById("openRulesButton").addEventListener("click", () => {
         document.getElementById("rulesOverlay").style.display = "block"
     });
     document.getElementById("closeRulesButton").addEventListener("click", () => {
         document.getElementById("rulesOverlay").style.display = "none"
     });
+
+    // Brings up mobile keyboard
+    const mobileInput = document.getElementById("mobileInput")
+    document.addEventListener("click", () => {
+            mobileInput.focus()
+    })
 }
 
 main()
