@@ -1,10 +1,16 @@
+/**
+ * Brings the rules popup
+ * @param {Boolean} hasReadRules Boolean on whether to prevent or allow the popup showing (based on first visit)
+ */
 function showRules(hasReadRules) {
     if (!hasReadRules) {
         const rules = document.getElementById("rulesOverlay")
         rules.style.display = "block"
     }
 }
-
+/**
+ * Creates divs for the wordle game for UI
+ */
 function setupGame() {
     const container = document.createElement("div")
     const grid = document.createElement("div")
@@ -12,8 +18,8 @@ function setupGame() {
     container.id = "container"
     grid.className = "grid"
 
-    for (let row = 0 ; row < 6; row++) {
-        for (let col = 0 ; col < 5; col++) {
+    for (let row = 0 ; row < 6; row++) { // Amount of guesses
+        for (let col = 0 ; col < 5; col++) { // Amount of letter per guess
             const letter = document.createElement("div")
             letter.className = "gamezone"
             letter.id = `letter${row}${col}`
@@ -24,7 +30,7 @@ function setupGame() {
     }
 
     container.appendChild(grid)
-    document.body.appendChild(container)
+    document.body.appendChild(container) // Adds to html
 }
 
 function getNewWord() { 
@@ -39,11 +45,18 @@ function getNewWord() {
     return wordList[randomIndex]
 }
 
+/**
+ * Validates user input allowing inputs to add, remove and submit
+ * @param {String} input Keydown event input
+ * @returns {String} Accepted input
+ * @returns {Null} Invalid input
+ */
 function validateUserInput(input) {
     input = input.toUpperCase()
     
     if (input.length === 1) {
         if (!/[A-Z]/.test(input)) {
+            // Single character not from the alphabet (e.g. ! would get here)
             return null
         }
     }
@@ -57,31 +70,41 @@ function validateUserInput(input) {
 
     return input
 }
-
+/**
+ * Attempts to grab data from an API
+ * @param {String} url A hyperlink to desired API
+ * @returns {Object} Desired api result
+ * @returns {String} Error Type
+ * @returns {Null} API has responded negatively
+ */
 async function callAPI(url) {
     try {
-        const response = await fetch(url)
+        const response = await fetch(url) // Attempt to call API
 
         if (!response.ok) {
-            return null
+            return null // Api has bad response
         }
 
         return await response.json()
     }
     catch (error) {
         if (error.message === "Failed to fetch") {
-            return "internet error"
+            return "internet error" // User is not connected to internet
         }
-        return "internal error"
+        return "internal error" // Different type of error
     }
 }
-
+/**
+ * Finds if user guess is valid
+ * @param {String} userGuess Current guess the user has inputted
+ * @returns {Tuple} [isPlaying, errorMessage, gameState] 
+ */
 async function validateGuess(userGuess) {
     if (userGuess.length !== 5) {
         return [false, "Word must have 5 letters", "invalid guess"]
     }
 
-    let count = 0
+    let count = 0 // Limiting amount of calls
     let definitionData;
     while (count < 3) {
         definitionData = await callAPI(`https://api.dictionaryapi.dev/api/v2/entries/en/${userGuess}`)
@@ -107,6 +130,13 @@ async function validateGuess(userGuess) {
     return [true, null, "submitting guess"]
 }
 
+/**
+ * Determines the colour per letter to serve as a hint to the secret word
+ * @param {String} secretWord The word that the user is attempting to guess 
+ * @param {String} currentGuess Most attempt the user has made based on secret word
+ * @param {Object} colourTypes Types of colours that indicate certain hints
+ * @returns {Array} Colour per letter in current guess
+ */
 function findColours(secretWord, currentGuess, colourTypes) {
     const colours = []
 
@@ -143,45 +173,112 @@ function findColours(secretWord, currentGuess, colourTypes) {
     return colours
 }
 
+/**
+ * Attempts to add the current guess to the list of guesses
+ * @param {String} secretWord The word that the user is attempting to guess 
+ * @param {String} currentGuess Most attempt the user has made based on secret word
+ * @param {Array} allUserGuesses All attempts user has made based on the secret word
+ * @param {Object} colourTypes Types of colours that indicate certain hints
+ * @returns {Tuple} [gameState, currentGuess, allUserGuesses, errorMessage]
+ */
 async function handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes) {
-    const [valid, userErrorMessage, gameState] = await validateGuess(currentGuess)
+    const [valid, errorMessage, gameState] = await validateGuess(currentGuess)
     console.clear()
 
     if (!valid) {
-        return [gameState, currentGuess, allUserGuesses, userErrorMessage]
+        return [gameState, currentGuess, allUserGuesses, errorMessage]
     }
 
-    // Adding valid word to the list
+    // Adding valid word to the list of valid guesses
     const guessColours = findColours(secretWord, currentGuess, colourTypes)
     allUserGuesses.push({ word: currentGuess, colours: guessColours })
 
-    return [gameState, "", allUserGuesses, userErrorMessage]
+    return [gameState, "", allUserGuesses, errorMessage]
 }
 
+/**
+ * Finds out if the player has won if all colours are the correct colour
+ * @param {Array} colours All colours of the current guess
+ * @param {String} correctColour The colour that guarantees same letter same position
+ * @returns {Boolean} If the player has won or not
+ */
 function hasPlayerWon(colours, correctColour) {
     return !(colours.some((colour) => colour !== correctColour))
 }
 
+/**
+ * Determines on whether wordle has finished
+ * @param {Boolean} hasWon Value representing if the player has won
+ * @param {Array} allUserGuesses All attempts user has made based on the secret word
+ * @returns {Boolean} If the current game has finished
+ */
 function hasGameFinished(hasWon, allUserGuesses) {
     return hasWon || allUserGuesses.length > 5
 }
 
+/**
+ * Attempts to remove a letter from the current guess
+ * @param {String} currentGuess Most attempt the user has made based on secret word
+ * @returns {String} New current guess
+ */
 function removeLetter(currentGuess) {
     return (currentGuess.length > 0) ? currentGuess.substring(0, currentGuess.length - 1) : currentGuess
 }
 
+/**
+ * Attempts to add a letter to the current guess
+ * @param {String} currentGuess Most attempt the user has made based on secret word
+ * @param {String} character A single character
+ * @returns New current guess
+ */
 function addLetter(currentGuess, character) {
     return (currentGuess.length < 5) ? currentGuess + character : currentGuess
 }
 
-function showFrame(gameState, row, col, letter, colours, secretWord, userErrorMessage) {
+/**
+ * Uses the UI to present to the user how the game is functioning
+ * @param {String} gameState Value describing what action the game has done
+ * @param {Integer} row The users current guess number 
+ * @param {Integer} col The users current letter number 
+ * @param {String} letter The users changed letter or value
+ * @param {Array} colours All colours of the current guess
+ * @param {String} secretWord The word that the user is attempting to guess 
+ * @param {String} errorMessage Potential error message if an internal error or the user has made a mistkae
+ */
+function showFrame(gameState, row, col, letter, colours, secretWord, errorMessage) {
+    /**
+     * An alert to let the user know that they have won
+     */
     const showWinResults = () => alert("You Win!")
+
+    /**
+     * An alert to let the user know that they have lost
+     * @param {String} secretWord The word that the user is attempting to guess 
+     */
     const showLoseResults = (secretWord) => alert(`You Lose! The word was ${secretWord}`)
+
+    /**
+     * Allows the user to see errors
+     * @param {String} reason Error message
+     */
     const showError = (reason) => alert(reason)
+
+    /**
+     * Allows the user to see the letter they have added/removed
+     * @param {Integer} row The users current guess number 
+     * @param {Integer} col The users current letter number 
+     * @param {String} letter The users changed letter or value
+     */
     const showLetterChange = (row, col, letter) => {
         const letterContainer = document.getElementById(`letter${row}${col}`);
         letterContainer.innerHTML = letter
     }
+
+    /**
+     * Shows the current guess colours to the user
+     * @param {Integer} row The users current guess number 
+     * @param {Array} colours All colours of the current guess
+     */
     const showGuessColours = (row, colours) => {
         for (let col = 0; col < 5 ; col++) {
             const letterContainer = document.getElementById(`letter${row}${col}`);
@@ -218,27 +315,39 @@ function showFrame(gameState, row, col, letter, colours, secretWord, userErrorMe
             break        
 
         case "invalid guess":
-            showError(userErrorMessage)
+            showError(errorMessage)
             break
             
         case "internal error":
-            showError(userErrorMessage)
+            showError(errorMessage)
             break
     }
 }
 
+/**
+ * Runs a frame of wordle
+ * @param {Boolean} isPlaying Value determining if the current game is still playing
+ * @param {String} secretWord The word that the user is attempting to guess 
+ * @param {String} currentGuess Most attempt the user has made based on secret word
+ * @param {Array} allUserGuesses All attempts user has made based on the secret word
+ * @param {String} input Keydown Event for an user input
+ * @param {Object} colourTypes Types of colours that indicate certain hints
+ * @returns {Tuple} [isPlaying, currentGuess, allUserGuesses]
+ */
 async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, input, colourTypes) {
     const userInput = validateUserInput(input)
     if (userInput === null) {
         return [isPlaying, currentGuess, allUserGuesses]
     }
 
-    let userErrorMessage, gameState = null
+    let errorMessage, gameState = null
 
     if (userInput === 'ENTER') {
-        [gameState, currentGuess, allUserGuesses, userErrorMessage] = await handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes)
+        // Attempt at guessing word
+        [gameState, currentGuess, allUserGuesses, errorMessage] = await handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes)
         
-        if (userErrorMessage === null) {
+        if (errorMessage === null) {
+            // Valid guess has been made
             const hasWon = hasPlayerWon(allUserGuesses[allUserGuesses.length - 1].colours, colourTypes.correct)
             isPlaying = !hasGameFinished(hasWon, allUserGuesses)
 
@@ -253,6 +362,7 @@ async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, 
         }
     }
     else {
+        // Adding/Removing a letter
         const tempGuess = currentGuess
         let action = ""
 
@@ -271,7 +381,7 @@ async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, 
     }
 
     const colours = (allUserGuesses.length > 0) ? allUserGuesses[allUserGuesses.length - 1].colours : null
-    showFrame(gameState, allUserGuesses.length, currentGuess.length - 1, userInput, colours, secretWord, userErrorMessage)
+    showFrame(gameState, allUserGuesses.length, currentGuess.length - 1, userInput, colours, secretWord, errorMessage)
     
     return [isPlaying, currentGuess, allUserGuesses]
 }
@@ -295,14 +405,17 @@ function startGame() {
     })
 }
 
-function playGame() {
+/**
+ * Setup buttons for rules and restarting, allows wordle to start
+ */
+function main() {
     showRules(localStorage.getItem("hasReadRules"))
     localStorage.setItem("hasReadRules", true)
     
     setupGame()
-    startGame() // Initialize by starting the game
+    startGame() // Initialize by starting wordle
 
-    // Add an event listener to the button to restart the game
+    // Add an event listener to the button to restart wordle
     document.getElementById("restartButton").addEventListener("click", () => {
         window.location.reload();
     });
@@ -314,4 +427,4 @@ function playGame() {
     });
 }
 
-playGame()
+main()
