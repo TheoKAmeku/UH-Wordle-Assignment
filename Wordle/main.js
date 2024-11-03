@@ -273,6 +273,10 @@ function showFrame(gameState, row, col, letter, colours, secretWord, errorMessag
     const showLetterChange = (row, col, letter) => {
         const letterContainer = document.getElementById(`letter${row}${col}`);
         letterContainer.innerHTML = letter
+        letterContainer.classList.add("animation");
+
+        setTimeout(() => {
+            letterContainer.classList.remove("animation");}, duration); 
     }
 
     /**
@@ -284,6 +288,11 @@ function showFrame(gameState, row, col, letter, colours, secretWord, errorMessag
         for (let col = 0; col < 5 ; col++) {
             const letterContainer = document.getElementById(`letter${row}${col}`);
             letterContainer.classList.add(colours[col])
+
+            letterContainer.classList.add("animation");
+
+            setTimeout(() => {
+                letterContainer.classList.remove("animation");}, duration); 
         }
     }
 
