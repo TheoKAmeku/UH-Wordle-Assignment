@@ -42,3 +42,17 @@ body {
 .gamezone.right {
     background: var(--right);
 }
+
+.button {
+    background-color: #538d4e;
+    border:#3a3a3c;
+    border-width: 3px;
+    color: white;
+    padding: 16px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+  }
