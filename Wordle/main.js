@@ -418,7 +418,7 @@ function startGame() {
 /**
  * Setup buttons for rules and restarting, allows wordle to start
  */
-function main() 
+function main() {
     showRules(localStorage.getItem("hasReadRules"))
     localStorage.setItem("hasReadRules", true)
     
