@@ -102,6 +102,7 @@ function findColours(secretWord, currentGuess, colourTypes) {
 
 async function handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes) {
     const [valid, userErrorMessage, gameState] = await validateGuess(currentGuess)
+    console.clear()
 
     if (!valid) {
         return [gameState, currentGuess, allUserGuesses, userErrorMessage]
@@ -130,33 +131,53 @@ function addLetter(currentGuess, character) {
     return (currentGuess.length < 5) ? currentGuess + character : currentGuess
 }
 
-function showFrame(gameState, secretWord, currentGuess, allUserGuesses, isPlaying, hasWon, userErrorMessage) {
-    function showResults(hasWon, word) {
-        if (hasWon) {
-            console.log("You Win")
-        }
-        else {
-            console.log(`You Lose, the word was ${word}`)
-        }
+function showFrame(gameState, row, col, letter, colours, secretWord, userErrorMessage) {
+    const showWinResults = () => alert("You Win!")
+    const showLoseResults = (secretWord) => alert(`You Lose! The word was ${secretWord}`)
+    const showError = (reason) => alert(reason)
+    const showLetterChange = (row, col, letter) => {
+        const letterContainer = document.getElementById(`letter${row}${col}`);
+        letterContainer.innerHTML = letter
     }
-    function showError(reason) {
-        console.log(reason)
+    const showGuessColours = (row, colours) => {
+        for (let col = 0; col < 5 ; col++) {
+            const letterContainer = document.getElementById(`letter${row}${col}`);
+            letterContainer.classList.add(colours[col])
+        }
     }
 
-    if (!isPlaying) {
-        // Game has ended
-        showResults(hasWon, secretWord)
-    }
-    else {
-        if (userErrorMessage) {
-            // Error or user has invalid input
+    // All possible gameStates
+    switch (gameState) {
+        case "added letter":
+            showLetterChange(row, col, letter)
+            break
+
+        case "removed letter":
+            showLetterChange(row, col + 1, "")
+            break
+
+        case "submitting guess":
+            showGuessColours(row - 1, colours)
+            break
+
+        case "player has won":
+            showGuessColours(row - 1, colours)
+            setTimeout(() => {
+                showWinResults(secretWord)
+            }, 500)
+            break
+        
+        case "player has lost":
+            showGuessColours(row - 1, colours)
+            setTimeout(() => {
+                showLoseResults(secretWord)
+            }, 500)
+            break        
+
+        case "invalid guess":
             showError(userErrorMessage)
-        }
+            break
     }
-    
-    console.log(`Current Guess: ${currentGuess}, isPlaying: ${isPlaying}, gameState: ${gameState}`)
-    console.log("All Guesses:", allUserGuesses)
-    console.log("")
 }
 
 async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, input, colourTypes) {
@@ -165,15 +186,13 @@ async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, 
         return [isPlaying, currentGuess, allUserGuesses]
     }
 
-    // Backend
-    // Possible gameStates: "added letter", "removed letter", "submitting guess", "invalid guess", "player has lost", "player has won"
-    let hasWon, userErrorMessage, gameState = null
+    let userErrorMessage, gameState = null
 
     if (userInput === 'ENTER') {
         [gameState, currentGuess, allUserGuesses, userErrorMessage] = await handleGuess(secretWord, currentGuess, allUserGuesses, colourTypes)
         
         if (userErrorMessage === null) {
-            hasWon = hasPlayerWon(allUserGuesses[allUserGuesses.length - 1].colours, colourTypes.correct)
+            const hasWon = hasPlayerWon(allUserGuesses[allUserGuesses.length - 1].colours, colourTypes.correct)
             isPlaying = !hasGameFinished(hasWon, allUserGuesses)
 
             if (!isPlaying) {
@@ -186,31 +205,39 @@ async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, 
             }
         }
     }
-    else if (userInput === 'BACKSPACE' || userInput === 'DELETE') {
-        currentGuess = removeLetter(currentGuess, secretWord)
-        gameState = "removed letter"
-    }
     else {
-        currentGuess = addLetter(currentGuess, userInput)
-        gameState = "added letter"
+        const tempGuess = currentGuess
+        let action = ""
+
+        if (userInput === 'BACKSPACE' || userInput === 'DELETE') {
+            action = "removed"
+            currentGuess = removeLetter(currentGuess, secretWord)
+        }
+        else {
+            action = "added"
+            currentGuess = addLetter(currentGuess, userInput)
+        }
+
+        if (currentGuess !== tempGuess) {
+            gameState = `${action} letter`
+        }
     }
 
-    // Frontend
-    showFrame(gameState, secretWord, currentGuess, allUserGuesses, isPlaying, hasWon, userErrorMessage)
+    const colours = (allUserGuesses.length > 0) ? allUserGuesses[allUserGuesses.length - 1].colours : null
+    showFrame(gameState, allUserGuesses.length, currentGuess.length - 1, userInput, colours, secretWord, userErrorMessage)
     
     return [isPlaying, currentGuess, allUserGuesses]
 }
 
 function restartGame() {
     const secretWord = getNewWord()
-    const colourTypes = { correct: "#538d4e", exists: "#b59f3b", none: "#8a8a94" }
+    const colourTypes = { correct: 'right', exists: "wrong", none: "empty" }
 
     let currentGuess = ""
     let allUserGuesses = []
     let isPlaying = true
     let processingFrame = false
 
-    console.clear()
     showRules()
     console.log("New game started! Good luck!")
 
@@ -223,9 +250,31 @@ function restartGame() {
     })
 }
 
+function setupGame() {
+    const container = document.createElement("div")
+    const grid = document.createElement("div")
+
+    container.id = "container"
+    grid.className = "grid"
+
+    for (let row = 0 ; row < 6; row++) {
+        for (let col = 0 ; col < 5; col++) {
+            const letter = document.createElement("div")
+            letter.className = "gamezone"
+            letter.id = `letter${row}${col}`
+            letter.innerHTML = ""
+
+            grid.appendChild(letter)
+        }
+    }
+
+    container.appendChild(grid)
+    document.body.appendChild(container)
+}
+
 function playGame() {
-    console.clear()
     showRules()
+    setupGame()
     restartGame() // Initialize by starting the game
 }
 
