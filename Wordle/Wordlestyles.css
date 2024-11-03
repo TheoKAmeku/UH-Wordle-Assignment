@@ -24,7 +24,6 @@ body {
     padding: 4px;
 }
 
-
 #rulesTitle {
     color: black;
 }
@@ -80,7 +79,7 @@ body {
     background: var(--default)
 }
 
-#restartButton {
+.optionsButton {
     background-color: #538d4e;
     border:#3a3a3c;
     border-width: 3px;
