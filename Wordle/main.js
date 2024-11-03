@@ -396,7 +396,7 @@ async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, 
     return [isPlaying, currentGuess, allUserGuesses]
 }
 
-function startGame() {
+function startGame() 
     const secretWord = getNewWord()
     const colourTypes = { correct: 'right', exists: "wrong", none: "empty" }
 
