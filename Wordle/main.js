@@ -267,7 +267,8 @@ function restartGame() {
     showRules()
     console.log("New game started! Good luck!")
 
-    document.addEventListener("keydown", async (event) => { // Read user inputs
+    // Read user inputs
+    document.addEventListener("keydown", async (event) => { 
         if (isPlaying && !processingFrame) {
             processingFrame = true;
             [isPlaying, currentGuess, allUserGuesses] = await handleFrame(isPlaying, secretWord.toUpperCase(), currentGuess, allUserGuesses, event.key, colourTypes)
@@ -275,6 +276,11 @@ function restartGame() {
         }
     })
 }
+
+// Add an event listener to the button to restart the game
+document.getElementById("restartButton").addEventListener("click", () => {
+    restartGame();
+});
 
 function setupGame() {
     const container = document.createElement("div")
