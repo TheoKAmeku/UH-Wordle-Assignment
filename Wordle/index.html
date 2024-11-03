@@ -10,13 +10,49 @@
         <button id="restartButton">Restart Game</button>
 
         <div id="rulesOverlay">
-            <h1 id="rulesTitle" class="title">Rules</h1>
+            <h1 id="rulesTitle" class="title">How to Play</h1>
             <button id="closeRulesButton">Close</button>
-            <p>The aim of the game is to guess a secret word within 6 guesses. There are 5 letters in the word</p>
-            <p>If the colour of the letter is green, it means the letter is in the correct place</p>
-            <p>If the colour of the letter is yellow-orange, it means the letter exists in the secret word but not the correct place</p>
-            <p>Otherwise the letter does not exist in the word</p>
+            <h2>Guess the wordle in 6 tries!</h2>
+            <p>Each guess must be a 5 letter word</p>
+            <p>The color of the tiles will change to show how close your guess was to the word.</p>
+            <p><strong> Examples:</strong></p>
+            <div id="game">
+                <div class="grid">
+                    <div class="gamezone right">W</div>
+                    <div class="gamezone empty">O</div>
+                    <div class="gamezone empty">R</div>
+                    <div class="gamezone empty">D</div>
+                    <div class="gamezone empty">Y</div>
+                </div>
+            </div>
+            <br>
+            <p> <strong>W</strong> is in the word and in the correct spot.
+            <br>
+            </p>
+            <div id="game">
+                <div class="grid">
+                    <div class="gamezone wrong">L</div>
+                    <div class="gamezone empty">I</div>
+                    <div class="gamezone empty">G</div>
+                    <div class="gamezone empty">H</div>
+                    <div class="gamezone empty">T</div>
+                </div>
+            </div>
+            <br>
+            <p><strong>L</strong> is in the word but in the incorrect spot</p>
+            <br>
+            <div id="game">
+                <div class="grid">
+                    <div class="gamezone empty">R</div>
+                    <div class="gamezone empty">O</div>
+                    <div class="gamezone empty">G</div>
+                    <div class="gamezone empty">U</div>
+                    <div class="gamezone empty">E</div>
+                </div>
+            </div>
+            <br>
+            <p>None of the letters in <strong>ROGUE</strong> are in the word</p>
         </div>
         <script src="main.js"></script>
     </body>
-</html>
+</html> 
