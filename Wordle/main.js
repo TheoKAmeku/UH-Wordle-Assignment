@@ -250,6 +250,7 @@ function showFrame(gameState, row, col, letter, colours, secretWord, errorMessag
      * An alert to let the user know that they have won
      */
     const showWinResults = () => alert("You Win!")
+    const duration = 400;
 
     /**
      * An alert to let the user know that they have lost
