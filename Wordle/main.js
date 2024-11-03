@@ -47,8 +47,11 @@ async function callAPI(url) {
 
         return await response.json()
     }
-    catch {
-        return null
+    catch (error) {
+        if (error.message === "Failed to fetch") {
+            return "internet error"
+        }
+        return "internal error"
     }
 }
 
@@ -57,10 +60,29 @@ async function validateGuess(userGuess) {
         return [false, "Word must have 5 letters", "invalid guess"]
     }
 
-    const definitionData = await callAPI(`https://api.dictionaryapi.dev/api/v2/entries/en/${userGuess}`)
+    let count = 0
+    let definitionData;
+    while (count < 3) {
+        definitionData = await callAPI(`https://api.dictionaryapi.dev/api/v2/entries/en/${userGuess}`)
+
+        if (!(new Set([null, "internet error", "internal error"]).has(definitionData))) {
+            return [true, null, "submitting guess"]
+        }
+
+        count++
+    }
+    
     if (definitionData === null) {
         return [false, "Your input is not an actual word", "invalid guess"]
     }
+    if (definitionData === "internet error") {
+        return [false, "Please connect to the internet", "internal error"]
+    }
+    if (definitionData === "internal error") {
+        return [false, "There has been an error, please try again", "internal error"]
+    }
+    
+    
     return [true, null, "submitting guess"]
 }
 
@@ -175,6 +197,10 @@ function showFrame(gameState, row, col, letter, colours, secretWord, userErrorMe
             break        
 
         case "invalid guess":
+            showError(userErrorMessage)
+            break
+            
+        case "internal error":
             showError(userErrorMessage)
             break
     }
