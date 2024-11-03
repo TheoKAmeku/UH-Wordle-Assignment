@@ -1,6 +1,6 @@
 function showRules(hasReadRules) {
     if (!hasReadRules) {
-        const rules = document.getElementById("rules")
+        const rules = document.getElementById("rulesOverlay")
         rules.style.display = "block"
     }
 }
