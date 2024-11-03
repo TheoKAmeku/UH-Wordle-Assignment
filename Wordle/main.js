@@ -1,9 +1,30 @@
-function showRules() {
-    console.log("Rules")
-    console.log("The aim of the game is to guess a secret word within 6 guesses. There are 5 letters in the word")
-    console.log("If the colour of the letter is green, it means the letter is in the correct place")
-    console.log("If the colour of the letter is yellow-orange, it means the letter exists in the secret word but not the correct place")
-    console.log("Otherwise the letter does not exist in the word")
+function showRules(hasReadRules) {
+    if (!hasReadRules) {
+        const rules = document.getElementById("rules")
+        rules.style.display = "block"
+    }
+}
+
+function setupGame() {
+    const container = document.createElement("div")
+    const grid = document.createElement("div")
+
+    container.id = "container"
+    grid.className = "grid"
+
+    for (let row = 0 ; row < 6; row++) {
+        for (let col = 0 ; col < 5; col++) {
+            const letter = document.createElement("div")
+            letter.className = "gamezone"
+            letter.id = `letter${row}${col}`
+            letter.innerHTML = ""
+
+            grid.appendChild(letter)
+        }
+    }
+
+    container.appendChild(grid)
+    document.body.appendChild(container)
 }
 
 function getNewWord() { 
@@ -255,7 +276,7 @@ async function handleFrame(isPlaying, secretWord, currentGuess, allUserGuesses, 
     return [isPlaying, currentGuess, allUserGuesses]
 }
 
-function restartGame() {
+function startGame() {
     const secretWord = getNewWord()
     const colourTypes = { correct: 'right', exists: "wrong", none: "empty" }
 
@@ -263,9 +284,6 @@ function restartGame() {
     let allUserGuesses = []
     let isPlaying = true
     let processingFrame = false
-
-    showRules()
-    console.log("New game started! Good luck!")
 
     // Read user inputs
     document.addEventListener("keydown", async (event) => { 
@@ -277,37 +295,23 @@ function restartGame() {
     })
 }
 
-// Add an event listener to the button to restart the game
-document.getElementById("restartButton").addEventListener("click", () => {
-    restartGame();
-});
-
-function setupGame() {
-    const container = document.createElement("div")
-    const grid = document.createElement("div")
-
-    container.id = "container"
-    grid.className = "grid"
-
-    for (let row = 0 ; row < 6; row++) {
-        for (let col = 0 ; col < 5; col++) {
-            const letter = document.createElement("div")
-            letter.className = "gamezone"
-            letter.id = `letter${row}${col}`
-            letter.innerHTML = ""
-
-            grid.appendChild(letter)
-        }
-    }
-
-    container.appendChild(grid)
-    document.body.appendChild(container)
-}
-
 function playGame() {
-    showRules()
+    showRules(localStorage.getItem("hasReadRules"))
+    localStorage.setItem("hasReadRules", true)
+    
     setupGame()
-    restartGame() // Initialize by starting the game
+    startGame() // Initialize by starting the game
+
+    // Add an event listener to the button to restart the game
+    document.getElementById("restartButton").addEventListener("click", () => {
+        window.location.reload();
+    });
+    document.getElementById("openRulesButton").addEventListener("click", () => {
+        document.getElementById("rulesOverlay").style.display = "block"
+    });
+    document.getElementById("closeRulesButton").addEventListener("click", () => {
+        document.getElementById("rulesOverlay").style.display = "none"
+    });
 }
 
 playGame()

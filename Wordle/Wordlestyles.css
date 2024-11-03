@@ -9,9 +9,34 @@ body {
     --right: #538d4e;
 }
 
-#title {
+.title {
     color: white;
     text-align: center;
+}
+
+#rulesOverlay {
+    display: none;
+    position: absolute;
+    background-color: white;
+    color: black;
+    text-align: center;
+    margin: 4px 2px;
+    padding: 4px;
+}
+
+#rulesTitle {
+    color: black;
+}
+
+#openRulesButton {
+
+}
+
+#closeRulesButton {
+    position: absolute;
+    color: black;
+    right: 2%;
+    top: 5%;
 }
 
 #container {
@@ -50,7 +75,7 @@ body {
     background: var(--right);
 }
 
-.button {
+#restartButton {
     background-color: #538d4e;
     border:#3a3a3c;
     border-width: 3px;
